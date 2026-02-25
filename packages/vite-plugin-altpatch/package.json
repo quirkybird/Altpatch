@@ -1,0 +1,26 @@
+{
+  "name": "@packages/vite-plugin-altpatch",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@locator/runtime": "^0.5.1",
+    "@packages/server-core": "workspace:*",
+    "diff": "^5.2.0",
+    "highlight.js": "^11.11.1",
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "vite": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.2.3",
+    "vite": "^6.0.0"
+  }
+}
