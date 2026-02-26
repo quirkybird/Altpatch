@@ -24,7 +24,7 @@ export function altpatch(options: AltPatchPluginOptions = {}): Plugin {
         {
           tag: 'script',
           attrs: { type: 'module', src: `/@fs/${runtimePath}` },
-          injectTo: 'head-prepend'
+          injectTo: 'head'
         }
       ];
     }
