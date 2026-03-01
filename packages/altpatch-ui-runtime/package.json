@@ -1,5 +1,5 @@
 {
-  "name": "@packages/server-core",
+  "name": "@packages/altpatch-ui-runtime",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./runtime-path": {
+      "types": "./dist/runtime-path.d.ts",
+      "import": "./dist/runtime-path.js"
     }
   },
   "files": [
@@ -19,12 +23,15 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@babel/parser": "^7.29.0",
-    "diff": "^5.2.0",
-    "zod": "^3.24.1"
+    "@locator/runtime": "^0.5.1",
+    "highlight.js": "^11.11.1",
+    "lucide-react": "^0.575.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/diff": "^5.2.3"
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0"
   },
   "publishConfig": {
     "access": "public"

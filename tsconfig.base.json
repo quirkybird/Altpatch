@@ -12,8 +12,10 @@
     "paths": {
       "@packages/core": ["packages/core/src/index.ts"],
       "@packages/ui": ["packages/ui/src/index.ts"],
-      "@packages/vite-plugin-altpatch": ["packages/vite-plugin-altpatch/src/index.ts"],
-      "@packages/server-core": ["packages/server-core/src/index.ts"]
+      "@quirkybird/vite-plugin-altpatch": ["packages/vite-plugin-altpatch/src/index.ts"],
+      "@packages/server-core": ["packages/server-core/src/index.ts"],
+      "@packages/altpatch-api": ["packages/altpatch-api/src/index.ts"],
+      "@packages/altpatch-ui-runtime": ["packages/altpatch-ui-runtime/src/index.ts"]
     }
   }
 }

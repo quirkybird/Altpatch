@@ -2,3 +2,8 @@ export * from './types';
 export * from './diff';
 export * from './fs-guard';
 export * from './mock-modify';
+export * from './llm/types';
+export * from './llm/schema';
+export * from './llm/prompt';
+export * from './llm/syntax-guard';
+export * from './llm/openai-compatible';

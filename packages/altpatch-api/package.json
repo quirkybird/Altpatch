@@ -1,5 +1,5 @@
 {
-  "name": "@packages/server-core",
+  "name": "@packages/altpatch-api",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,15 +16,18 @@
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm --filter @packages/server-core build && pnpm run build"
   },
   "dependencies": {
-    "@babel/parser": "^7.29.0",
-    "diff": "^5.2.0",
+    "@packages/server-core": "workspace:^0.1.0",
+    "express": "^4.21.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/diff": "^5.2.3"
+    "@types/express": "^4.17.21",
+    "@types/ws": "^8.5.12",
+    "vite": "^6.0.0",
+    "ws": "^8.18.0"
   },
   "publishConfig": {
     "access": "public"

@@ -20,12 +20,6 @@ importers:
 
   apps/demo-vite-react:
     dependencies:
-      '@locator/babel-jsx':
-        specifier: ^0.5.1
-        version: 0.5.1(@babel/core@7.29.0)(tsx@4.21.0)
-      '@locator/runtime':
-        specifier: ^0.5.1
-        version: 0.5.1(tsx@4.21.0)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -33,7 +27,7 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
     devDependencies:
-      '@packages/vite-plugin-altpatch':
+      '@quirkybird/vite-plugin-altpatch':
         specifier: workspace:*
         version: link:../../packages/vite-plugin-altpatch
       '@types/react':
@@ -49,52 +43,24 @@ importers:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@22.19.11)(jiti@1.21.7)(tsx@4.21.0)
 
-  apps/extension:
-    dependencies:
-      '@packages/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@packages/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-    devDependencies:
-      '@types/chrome':
-        specifier: ^0.0.306
-        version: 0.0.306
-      vite:
-        specifier: ^6.0.0
-        version: 6.4.1(@types/node@22.19.11)(jiti@1.21.7)(tsx@4.21.0)
-
   apps/server:
     dependencies:
-      '@packages/core':
+      '@packages/altpatch-api':
         specifier: workspace:*
-        version: link:../../packages/core
-      '@packages/server-core':
-        specifier: workspace:*
-        version: link:../../packages/server-core
+        version: link:../../packages/altpatch-api
       cors:
         specifier: ^2.8.5
         version: 2.8.6
-      diff:
-        specifier: ^5.2.0
-        version: 5.2.2
       express:
         specifier: ^4.21.2
         version: 4.22.1
       ws:
         specifier: ^8.18.0
         version: 8.19.0
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17
         version: 2.8.19
-      '@types/diff':
-        specifier: ^5.2.3
-        version: 5.2.3
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
@@ -105,40 +71,64 @@ importers:
         specifier: ^4.19.2
         version: 4.21.0
 
-  packages/core: {}
-
-  packages/server-core:
+  packages/altpatch-api:
     dependencies:
-      diff:
-        specifier: ^5.2.0
-        version: 5.2.2
+      '@packages/server-core':
+        specifier: workspace:^0.1.0
+        version: link:../server-core
+      express:
+        specifier: ^4.21.2
+        version: 4.22.1
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
-      '@types/diff':
-        specifier: ^5.2.3
-        version: 5.2.3
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/ws':
+        specifier: ^8.5.12
+        version: 8.18.1
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)(jiti@1.21.7)(tsx@4.21.0)
+      ws:
+        specifier: ^8.18.0
+        version: 8.19.0
 
-  packages/ui: {}
-
-  packages/vite-plugin-altpatch:
+  packages/altpatch-ui-runtime:
     dependencies:
       '@locator/runtime':
         specifier: ^0.5.1
         version: 0.5.1(tsx@4.21.0)
-      '@packages/server-core':
-        specifier: workspace:*
-        version: link:../server-core
-      diff:
-        specifier: ^5.2.0
-        version: 5.2.2
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1
+      lucide-react:
+        specifier: ^0.575.0
+        version: 0.575.0(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.11
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+
+  packages/server-core:
+    dependencies:
+      '@babel/parser':
+        specifier: ^7.29.0
+        version: 7.29.0
+      diff:
+        specifier: ^5.2.0
+        version: 5.2.2
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -146,12 +136,49 @@ importers:
       '@types/diff':
         specifier: ^5.2.3
         version: 5.2.3
-      '@types/react':
-        specifier: ^18.3.11
-        version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.7(@types/react@18.3.28)
+
+  packages/vite-plugin-altpatch:
+    dependencies:
+      '@babel/core':
+        specifier: ^7.29.0
+        version: 7.29.0
+      '@babel/parser':
+        specifier: ^7.29.0
+        version: 7.29.0
+      '@locator/babel-jsx':
+        specifier: ^0.5.1
+        version: 0.5.1(@babel/core@7.29.0)(tsx@4.21.0)
+      '@locator/runtime':
+        specifier: ^0.5.1
+        version: 0.5.1(tsx@4.21.0)
+      diff:
+        specifier: ^5.2.0
+        version: 5.2.2
+      express:
+        specifier: ^4.21.2
+        version: 4.22.1
+      highlight.js:
+        specifier: ^11.11.1
+        version: 11.11.1
+      lucide-react:
+        specifier: ^0.575.0
+        version: 0.575.0(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      ws:
+        specifier: ^8.18.0
+        version: 8.19.0
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/babel__core':
+        specifier: ^7.20.5
+        version: 7.20.5
       vite:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@22.19.11)(jiti@1.21.7)(tsx@4.21.0)
@@ -1233,9 +1260,6 @@ packages:
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
-  '@types/chrome@0.0.306':
-    resolution: {integrity: sha512-95kgcqvTNcaZCXmx/kIKY6uo83IaRNT3cuPxYqlB2Iu+HzKDCP4t7TUe7KhJijTdibcvn+SzziIcfSLIlgRnhQ==}
-
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
 
@@ -1253,15 +1277,6 @@ packages:
 
   '@types/express@4.17.25':
     resolution: {integrity: sha512-dVd04UKsfpINUnK0yBoYHDF3xu7xVH4BuDotC/xGuycx4CgbP48X/KF/586bcObxT0HENHXEU8Nqtu6NR+eKhw==}
-
-  '@types/filesystem@0.0.36':
-    resolution: {integrity: sha512-vPDXOZuannb9FZdxgHnqSwAG/jvdGM8Wq+6N4D/d80z+D4HWH+bItqsZaVRQykAn6WEVeEkLm2oQigyHtgb0RA==}
-
-  '@types/filewriter@0.0.33':
-    resolution: {integrity: sha512-xFU8ZXTw4gd358lb2jw25nxY9QAgqn2+bKKjKOYfNCzN4DKCFetK7sPtrlpg66Ywe3vWY9FNxprZawAh9wfJ3g==}
-
-  '@types/har-format@1.2.16':
-    resolution: {integrity: sha512-fluxdy7ryD3MV6h8pTfTYpy/xQzCFC7m89nOH9y94cNqJ1mDIDPut7MnRHI3F6qRmh/cT2fUjG1MLdCNb4hE9A==}
 
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
@@ -1658,6 +1673,11 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
+
+  lucide-react@0.575.0:
+    resolution: {integrity: sha512-VuXgKZrk0uiDlWjGGXmKV6MSk9Yy4l10qgVvzGn2AWBx1Ylt0iBexKOAoA6I7JO3m+M9oeovJd3yYENfkUbOeg==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -3208,11 +3228,6 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/node': 22.19.11
 
-  '@types/chrome@0.0.306':
-    dependencies:
-      '@types/filesystem': 0.0.36
-      '@types/har-format': 1.2.16
-
   '@types/connect@3.4.38':
     dependencies:
       '@types/node': 22.19.11
@@ -3238,14 +3253,6 @@ snapshots:
       '@types/express-serve-static-core': 4.19.8
       '@types/qs': 6.14.0
       '@types/serve-static': 1.15.10
-
-  '@types/filesystem@0.0.36':
-    dependencies:
-      '@types/filewriter': 0.0.33
-
-  '@types/filewriter@0.0.33': {}
-
-  '@types/har-format@1.2.16': {}
 
   '@types/http-errors@2.0.5': {}
 
@@ -3705,6 +3712,10 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide-react@0.575.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   math-intrinsics@1.1.0: {}
 

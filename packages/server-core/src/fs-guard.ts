@@ -35,4 +35,8 @@ export class FsGuard {
   async write(filePath: string, content: string): Promise<void> {
     await fs.writeFile(this.safePath(filePath), content, 'utf8');
   }
+
+  resolve(filePath: string): string {
+    return this.safePath(filePath);
+  }
 }

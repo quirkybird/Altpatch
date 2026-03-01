@@ -9,13 +9,11 @@
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
-    "@locator/babel-jsx": "^0.5.1",
-    "@locator/runtime": "^0.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@packages/vite-plugin-altpatch": "workspace:*",
+    "@quirkybird/vite-plugin-altpatch": "workspace:*",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.4",
