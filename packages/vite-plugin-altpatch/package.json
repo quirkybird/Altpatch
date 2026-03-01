@@ -1,13 +1,15 @@
 {
   "name": "@quirkybird/vite-plugin-altpatch",
-  "version": "0.1.1",
+  "version": "0.1.11",
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "files": [
@@ -15,7 +17,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json && node scripts/postbuild-entry.cjs",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm run build"
   },
@@ -23,7 +25,6 @@
     "@babel/parser": "^7.29.0",
     "@babel/core": "^7.29.0",
     "@locator/babel-jsx": "^0.5.1",
-    "@locator/runtime": "^0.5.1",
     "diff": "^5.2.0",
     "express": "^4.21.2",
     "highlight.js": "^11.11.1",

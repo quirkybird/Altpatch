@@ -3,7 +3,7 @@ import { transformAsync } from '@babel/core';
 import locatorBabelJsx from '@locator/babel-jsx';
 import { type Plugin } from 'vite';
 import { registerAltpatchViteApi } from '../../altpatch-api/src/index';
-import { runtimeEntryPath } from '../../altpatch-ui-runtime/src/runtime-path';
+import { runtimeEntryPath } from '../../altpatch-ui-runtime/src/index';
 import type { AltPatchPluginOptions } from './types';
 
 export type { AltPatchPluginOptions } from './types';
@@ -15,6 +15,7 @@ export function altpatch(options: AltPatchPluginOptions = {}): Plugin {
   const locatorEnv = options.locator?.env ?? 'development';
   const locatorDataAttribute = options.locator?.dataAttribute ?? 'path';
   let viteRoot = projectRoot;
+  let hasWarnedLocatorWindowsFallback = false;
 
   return {
     name: 'altpatch-vite-plugin',
@@ -44,18 +45,37 @@ export function altpatch(options: AltPatchPluginOptions = {}): Plugin {
         : cleanId.startsWith('/')
           ? path.resolve(viteRoot, `.${cleanId}`)
           : path.resolve(viteRoot, cleanId);
+      const normalizedFilenameForLocator = filenameForLocator.replace(/\\/g, '/');
 
-      const transformed = await transformAsync(code, {
-        filename: filenameForLocator,
-        babelrc: false,
-        configFile: false,
-        sourceMaps: true,
-        parserOpts: {
-          sourceType: 'module',
-          plugins: ['jsx', 'typescript']
-        },
-        plugins: [[locatorBabelJsx, { env: locatorEnv, dataAttribute: locatorDataAttribute }]]
-      });
+      let transformed;
+      try {
+        transformed = await transformAsync(code, {
+          filename: normalizedFilenameForLocator,
+          babelrc: false,
+          configFile: false,
+          sourceMaps: true,
+          parserOpts: {
+            sourceType: 'module',
+            plugins: ['jsx', 'typescript']
+          },
+          plugins: [[locatorBabelJsx, { env: locatorEnv, dataAttribute: locatorDataAttribute }]]
+        });
+      } catch (error) {
+        const message = String(error);
+        const isWindowsLocatorEscapeIssue =
+          process.platform === 'win32' &&
+          message.includes('Bad character escape sequence');
+        if (!isWindowsLocatorEscapeIssue) throw error;
+
+        if (!hasWarnedLocatorWindowsFallback) {
+          hasWarnedLocatorWindowsFallback = true;
+          console.warn(
+            '[altpatch] Locator transform skipped due to upstream Windows path escape issue in @locator/babel-jsx. ' +
+            'Code transform continues without locator attributes for affected files.'
+          );
+        }
+        return null;
+      }
 
       if (!transformed?.code) return null;
       return {

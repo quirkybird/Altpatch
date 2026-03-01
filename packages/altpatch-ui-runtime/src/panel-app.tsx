@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { getElementInfo } from '@locator/runtime/dist/adapters/getElementInfo';
-import hljs from 'highlight.js/lib/core';
-import typescript from 'highlight.js/lib/languages/typescript';
-import javascript from 'highlight.js/lib/languages/javascript';
-import xml from 'highlight.js/lib/languages/xml';
-import diff from 'highlight.js/lib/languages/diff';
 import {
   Panel,
   panelStyles,
@@ -19,11 +13,6 @@ import {
   type PanelTexts
 } from './Panel';
 import { computePanelPlacementFromPointer } from './panel-placement';
-
-hljs.registerLanguage('typescript', typescript);
-hljs.registerLanguage('javascript', javascript);
-hljs.registerLanguage('xml', xml);
-hljs.registerLanguage('diff', diff);
 
 type SourceLocation = {
   filePath: string;
@@ -309,6 +298,36 @@ function resolveSourceLocation(target: Element): SourceLocation | null {
     if (!raw) return '';
     return raw.startsWith('/@fs/') ? raw.slice('/@fs/'.length) : raw;
   };
+  const resolveByReactDebugSource = (): SourceLocation | null => {
+    type ReactFiber = {
+      _debugSource?: { fileName?: unknown; lineNumber?: unknown; columnNumber?: unknown } | null;
+      _debugOwner?: ReactFiber | null;
+    };
+    type ReactRenderer = {
+      findFiberByHostInstance?: (target: Element) => ReactFiber | null;
+    };
+    const renderers = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers;
+    const list = renderers ? Array.from(renderers.values()) as ReactRenderer[] : [];
+    for (const renderer of list) {
+      if (!renderer?.findFiberByHostInstance) continue;
+      const fiber = renderer.findFiberByHostInstance(target);
+      let current: ReactFiber | null | undefined = fiber;
+      while (current) {
+        const source = current._debugSource;
+        const filePath = normalizeLocatorPath(source?.fileName);
+        if (filePath) {
+          return {
+            filePath,
+            line: Number(source?.lineNumber) || 0,
+            column: Number(source?.columnNumber) || 0,
+            framework: 'react'
+          };
+        }
+        current = current._debugOwner;
+      }
+    }
+    return null;
+  };
 
   const runtime = (window as any).__ALTPATCH_LOCATOR_RUNTIME__;
   if (runtime?.locate) {
@@ -322,6 +341,10 @@ function resolveSourceLocation(target: Element): SourceLocation | null {
         };
       }
     }
+  }
+  const reactSource = resolveByReactDebugSource();
+  if (reactSource) {
+    return reactSource;
   }
 
   if (target instanceof HTMLElement) {
@@ -341,19 +364,6 @@ function resolveSourceLocation(target: Element): SourceLocation | null {
       }
     }
 
-    const info = getElementInfo(target, 'jsx');
-    const link = info?.thisElement?.link;
-    if (link) {
-      const cleanPath = normalizeLocatorPath(link.filePath);
-      if (cleanPath.length > 0) {
-        return {
-          filePath: cleanPath,
-          line: Number(link.line) || 0,
-          column: Number(link.column) || 0,
-          framework: 'react'
-        };
-      }
-    }
   }
 
   return null;
@@ -576,15 +586,7 @@ async function readSseStream(
 }
 
 function renderHighlighted(code: string, mode: 'code' | 'diff' = 'code'): string {
-  try {
-    const highlighted =
-      mode === 'diff'
-        ? hljs.highlight(code, { language: 'diff', ignoreIllegals: true }).value
-        : hljs.highlightAuto(code, ['typescript', 'javascript', 'xml']).value;
-    return `<code class="hljs">${highlighted}</code>`;
-  } catch {
-    return `<code class="hljs">${escapeHtml(code)}</code>`;
-  }
+  return `<code class="hljs altpatch-${mode}">${escapeHtml(code)}</code>`;
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
