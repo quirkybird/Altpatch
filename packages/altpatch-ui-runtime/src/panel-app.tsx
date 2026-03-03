@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import 'prismjs';
+import 'prismjs/components/prism-markup';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-tsx';
+import 'prismjs/components/prism-diff';
 import {
   Panel,
   panelStyles,
@@ -13,6 +21,13 @@ import {
   type PanelTexts
 } from './Panel';
 import { computePanelPlacementFromPointer } from './panel-placement';
+
+type PrismLike = {
+  languages?: Record<string, unknown>;
+  highlight?: (text: string, grammar: unknown, language: string) => string;
+};
+
+const prism = (globalThis as { Prism?: PrismLike }).Prism;
 
 type SourceLocation = {
   filePath: string;
@@ -586,7 +601,54 @@ async function readSseStream(
 }
 
 function renderHighlighted(code: string, mode: 'code' | 'diff' = 'code'): string {
-  return `<code class="hljs altpatch-${mode}">${escapeHtml(code)}</code>`;
+  const highlightWith = (source: string, language: string): string => {
+    const grammar = prism?.languages?.[language];
+    if (!grammar || typeof prism?.highlight !== 'function') return escapeHtml(source);
+    return prism.highlight(source, grammar, language);
+  };
+
+  try {
+    if (mode === 'diff') {
+      const lines = code.split('\n');
+      const rendered = lines.map((line) => {
+        if (line.startsWith('+')) {
+          const highlighted = highlightWith(line.slice(1), 'tsx');
+          return `<span class="altpatch-line altpatch-diff-line altpatch-diff-add"><span class="altpatch-gutter">+ </span><span class="altpatch-code">${highlighted}</span></span>`;
+        }
+        if (line.startsWith('-')) {
+          const highlighted = highlightWith(line.slice(1), 'tsx');
+          return `<span class="altpatch-line altpatch-diff-line altpatch-diff-del"><span class="altpatch-gutter">- </span><span class="altpatch-code">${highlighted}</span></span>`;
+        }
+        if (line.startsWith('@@') || line.startsWith('+++') || line.startsWith('---')) {
+          return `<span class="altpatch-line altpatch-diff-line altpatch-diff-meta"><span class="altpatch-code">${escapeHtml(line)}</span></span>`;
+        }
+        const content = line.startsWith(' ') ? line.slice(1) : line;
+        const highlighted = highlightWith(content, 'tsx');
+        return `<span class="altpatch-line altpatch-diff-line altpatch-diff-ctx"><span class="altpatch-gutter">  </span><span class="altpatch-code">${highlighted}</span></span>`;
+      }).join('');
+      return `<code class="altpatch-highlight altpatch-${mode}">${rendered}</code>`;
+    }
+
+    const lines = code.split('\n');
+    const rendered = lines.map((line) => {
+      const match = line.match(/^([ >])(\s*\d+)\s\|\s?(.*)$/);
+      if (!match) {
+        const highlighted = highlightWith(line, 'tsx');
+        return `<span class="altpatch-line"><span class="altpatch-code">${highlighted}</span></span>`;
+      }
+
+      const marker = match[1];
+      const lineNo = match[2];
+      const source = match[3] ?? '';
+      const gutter = `${marker}${lineNo} | `;
+      const highlighted = highlightWith(source, 'tsx');
+      return `<span class="altpatch-line"><span class="altpatch-gutter">${escapeHtml(gutter)}</span><span class="altpatch-code">${highlighted}</span></span>`;
+    }).join('');
+
+    return `<code class="altpatch-highlight altpatch-${mode} language-tsx">${rendered}</code>`;
+  } catch {
+    return `<code class="altpatch-highlight altpatch-${mode}">${escapeHtml(code)}</code>`;
+  }
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {

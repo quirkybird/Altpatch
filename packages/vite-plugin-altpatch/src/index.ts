@@ -3,7 +3,7 @@ import { transformAsync } from '@babel/core';
 import locatorBabelJsx from '@locator/babel-jsx';
 import { type Plugin } from 'vite';
 import { registerAltpatchViteApi } from '../../altpatch-api/src/index';
-import { runtimeEntryPath } from '../../altpatch-ui-runtime/src/index';
+import { runtimeEntryPath } from '../../altpatch-ui-runtime/src/runtime-path';
 import type { AltPatchPluginOptions } from './types';
 
 export type { AltPatchPluginOptions } from './types';

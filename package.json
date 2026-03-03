@@ -4,7 +4,9 @@
   "packageManager": "pnpm@10.11.1",
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
+    "build": "pnpm run clean:src-artifacts && turbo run build && pnpm run check:src-artifacts",
+    "check:src-artifacts": "node scripts/src-artifacts.cjs check",
+    "clean:src-artifacts": "node scripts/src-artifacts.cjs clean",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "clean": "turbo run clean"

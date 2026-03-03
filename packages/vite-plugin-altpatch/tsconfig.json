@@ -13,7 +13,6 @@
   "include": [
     "src/index.ts",
     "src/types.ts",
-    "src/types/**/*.d.ts",
-    "../altpatch-ui-runtime/src/runtime-entry.ts"
+    "src/types/**/*.d.ts"
   ]
 }

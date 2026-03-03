@@ -4,3 +4,13 @@ node_modules
 dist
 coverage
 .turbo
+
+# Prevent side-by-side TS build outputs in source directories.
+packages/altpatch-api/src/*.js
+packages/altpatch-api/src/*.js.map
+packages/altpatch-api/src/*.d.ts
+packages/altpatch-api/src/*.d.ts.map
+packages/altpatch-ui-runtime/src/*.js
+packages/altpatch-ui-runtime/src/*.js.map
+packages/altpatch-ui-runtime/src/*.d.ts
+packages/altpatch-ui-runtime/src/*.d.ts.map
