@@ -1,0 +1,48 @@
+{
+  "name": "@quirkybird/webpack-plugin-altpatch",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && rollup -c && pnpm exec esbuild ../altpatch-ui-runtime/src/runtime-entry.ts --bundle --format=esm --platform=browser --target=es2020 --outfile=dist/runtime-entry.js",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.29.0",
+    "@locator/babel-jsx": "^0.5.1",
+    "diff": "^5.2.0",
+    "express": "^4.21.2",
+    "lucide-react": "^0.575.0",
+    "prismjs": "^1.30.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ws": "^8.18.0",
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "webpack": ">=5 <6",
+    "webpack-dev-server": ">=4 <6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.25.12",
+    "rollup": "^4.59.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

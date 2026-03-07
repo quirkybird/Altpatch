@@ -156,6 +156,7 @@ pnpm clean
 
 ```bash
 pnpm --filter @apps/demo-vite-react dev
+pnpm --filter @apps/demo-webpack-react dev
 pnpm --filter @apps/server dev
 pnpm --filter @quirkybird/vite-plugin-altpatch typecheck
 ```

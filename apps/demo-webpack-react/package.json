@@ -1,0 +1,29 @@
+{
+  "name": "@apps/demo-webpack-react",
+  "private": true,
+  "scripts": {
+    "predev": "pnpm --filter @quirkybird/webpack-plugin-altpatch build",
+    "dev": "pnpm exec webpack serve --config webpack.config.mjs --mode development",
+    "prebuild": "pnpm --filter @quirkybird/webpack-plugin-altpatch build",
+    "build": "pnpm exec webpack --config webpack.config.mjs --mode production",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@quirkybird/webpack-plugin-altpatch": "workspace:*",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "babel-loader": "^10.0.0",
+    "html-webpack-plugin": "^5.6.4",
+    "typescript": "^5.7.0",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2"
+  }
+}
