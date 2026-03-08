@@ -28,7 +28,7 @@ export function App() {
       style={{ fontFamily: 'system-ui', padding: 24, backgroundColor: 'black', color: 'white' }}
     >
       <h1 style={{ color: 'white' }}>欢迎来到我的 Vite 插件altpatch</h1>
-      <p style={{ color: 'white' }}>
+      <p style={{ color: 'white', fontSize: '22px' }}>
         按住 Alt 点击下面按钮，会触发 AltPatch tooltip 与 /api/read-file 调用。
       </p>
       <CyclingButtons color={colors[colorIndex]} />

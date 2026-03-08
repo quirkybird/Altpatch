@@ -18,7 +18,9 @@ import {
   type PanelThemeOption,
   type PanelLocale,
   type PanelLocaleOption,
-  type PanelTexts
+  type PanelTexts,
+  type QuickStyleDraft,
+  type QuickStyleField
 } from './Panel';
 import { computePanelPlacementFromPointer } from './panel-placement';
 
@@ -88,6 +90,20 @@ const PANEL_HOST_ID = 'altpatch-tooltip-host';
 const STORAGE_DOCK_KEY = 'altpatch.panel.dock';
 const STORAGE_SIZE_KEY = 'altpatch.panel.size';
 const STORAGE_THEME_KEY = 'altpatch.panel.theme';
+const EMPTY_QUICK_STYLE: QuickStyleDraft = {
+  padding: '',
+  margin: '',
+  fontSize: '',
+  paddingTop: '',
+  paddingRight: '',
+  paddingBottom: '',
+  paddingLeft: '',
+  marginTop: '',
+  marginRight: '',
+  marginBottom: '',
+  marginLeft: '',
+  advanced: false
+};
 const PANEL_LOCALE_OPTIONS: PanelLocaleOption[] = [
   { id: 'zh', label: '中文' },
   { id: 'en', label: 'English' }
@@ -150,6 +166,9 @@ type PanelRuntimeTexts = PanelTexts & {
   generatingQuickDiff: string;
   quickGenerated: string;
   quickFailed: string;
+  quickStyleSection: string;
+  quickStyleAdvanced: string;
+  quickStyleApplyNotFound: string;
   enterPrompt: string;
   generatingPatch: string;
   patchGenerated: string;
@@ -214,7 +233,7 @@ const PANEL_I18N: Record<PanelLocale, PanelRuntimeTexts> = {
     switchedQuick: '已切换到快速文本模式。',
     switchedAi: '已切换到 AI 辅助模式。',
     readingSource: '正在读取源码...',
-    quickEmptyText: '请输入要替换成的新文本。',
+    quickEmptyText: '请输入新文本或设置至少一个样式字段。',
     generatingQuickDiff: '正在生成快速 Diff...',
     quickGenerated: '快速文本 Diff 已生成。',
     quickFailed: '快速模式失败',
@@ -237,7 +256,21 @@ const PANEL_I18N: Record<PanelLocale, PanelRuntimeTexts> = {
     themeOcean: '海洋蓝',
     themePaper: '纸张浅色',
     scopeLocal: '作用范围',
-    scopeFull: '作用范围：整文件'
+    scopeFull: '作用范围：整文件',
+    quickStyleSection: '样式快速调整',
+    quickStyleAdvanced: '高级',
+    quickPadding: '内边距',
+    quickMargin: '外边距',
+    quickFontSize: '字号',
+    quickPaddingTop: '内边距上',
+    quickPaddingRight: '内边距右',
+    quickPaddingBottom: '内边距下',
+    quickPaddingLeft: '内边距左',
+    quickMarginTop: '外边距上',
+    quickMarginRight: '外边距右',
+    quickMarginBottom: '外边距下',
+    quickMarginLeft: '外边距左',
+    quickStyleApplyNotFound: '未在定位附近找到可安全修改的标签，请切换 AI 辅助或重新定位。'
   },
   en: {
     panelTitle: 'AltPatch',
@@ -280,7 +313,7 @@ const PANEL_I18N: Record<PanelLocale, PanelRuntimeTexts> = {
     switchedQuick: 'Switched to Quick Text mode.',
     switchedAi: 'Switched to AI Assist mode.',
     readingSource: 'Reading source...',
-    quickEmptyText: 'Please enter replacement text.',
+    quickEmptyText: 'Please enter replacement text or fill at least one style field.',
     generatingQuickDiff: 'Generating quick diff...',
     quickGenerated: 'Quick text diff generated.',
     quickFailed: 'Quick mode failed',
@@ -303,7 +336,21 @@ const PANEL_I18N: Record<PanelLocale, PanelRuntimeTexts> = {
     themeOcean: 'Console Blue',
     themePaper: 'Paper Light',
     scopeLocal: 'Scope',
-    scopeFull: 'Scope: full file'
+    scopeFull: 'Scope: full file',
+    quickStyleSection: 'Quick Style Controls',
+    quickStyleAdvanced: 'Advanced',
+    quickPadding: 'Padding',
+    quickMargin: 'Margin',
+    quickFontSize: 'Font Size',
+    quickPaddingTop: 'Padding Top',
+    quickPaddingRight: 'Padding Right',
+    quickPaddingBottom: 'Padding Bottom',
+    quickPaddingLeft: 'Padding Left',
+    quickMarginTop: 'Margin Top',
+    quickMarginRight: 'Margin Right',
+    quickMarginBottom: 'Margin Bottom',
+    quickMarginLeft: 'Margin Left',
+    quickStyleApplyNotFound: 'Could not find a safe editable tag near this location. Switch to AI Assist or reselect.'
   }
 };
 
@@ -521,6 +568,112 @@ function buildQuickTextAfter(source: string, line: number, oldText: string, next
   }
 
   throw new Error(notFoundMessage);
+}
+
+function normalizeCssInputValue(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) {
+    return `${trimmed}px`;
+  }
+  return trimmed;
+}
+
+function buildQuickStyleMutation(draft: QuickStyleDraft): Record<string, string> {
+  const mutation: Record<string, string> = {};
+  const setIf = (key: string, value: string) => {
+    const normalized = normalizeCssInputValue(value);
+    if (normalized) mutation[key] = normalized;
+  };
+
+  setIf('padding', draft.padding);
+  setIf('margin', draft.margin);
+  setIf('fontSize', draft.fontSize);
+  setIf('paddingTop', draft.paddingTop);
+  setIf('paddingRight', draft.paddingRight);
+  setIf('paddingBottom', draft.paddingBottom);
+  setIf('paddingLeft', draft.paddingLeft);
+  setIf('marginTop', draft.marginTop);
+  setIf('marginRight', draft.marginRight);
+  setIf('marginBottom', draft.marginBottom);
+  setIf('marginLeft', draft.marginLeft);
+  return mutation;
+}
+
+function findNearestOpeningTagBounds(source: string, line: number): { start: number; end: number } | null {
+  const lines = source.split('\n');
+  const clamped = Math.max(1, Math.min(lines.length, line || 1));
+  let anchorIndex = 0;
+  for (let i = 0; i < clamped - 1; i += 1) {
+    anchorIndex += (lines[i]?.length ?? 0) + 1;
+  }
+  const searchStart = Math.max(0, anchorIndex - 4000);
+  const searchEnd = Math.min(source.length, anchorIndex + 3000);
+  const chunk = source.slice(searchStart, searchEnd);
+
+  const candidates: Array<{ start: number; end: number }> = [];
+  for (let i = 0; i < chunk.length; i += 1) {
+    if (chunk[i] !== '<') continue;
+    const nextChar = chunk[i + 1] ?? '';
+    if (!/[A-Za-z]/.test(nextChar)) continue;
+    const end = chunk.indexOf('>', i + 1);
+    if (end < 0) continue;
+    const tag = chunk.slice(i, end + 1);
+    if (!/^<[A-Za-z][\w:.-]*/.test(tag)) continue;
+    if (tag.includes('\n<')) continue;
+    candidates.push({ start: searchStart + i, end: searchStart + end + 1 });
+  }
+  if (candidates.length === 0) return null;
+
+  const ranked = candidates
+    .map((item) => {
+      const distance = Math.min(Math.abs(anchorIndex - item.start), Math.abs(anchorIndex - item.end));
+      return { ...item, distance };
+    })
+    .sort((a, b) => a.distance - b.distance);
+  return ranked[0] ?? null;
+}
+
+function applyStyleMutationToTag(tag: string, mutation: Record<string, string>): string {
+  const styleRegex = /style\s*=\s*\{\{([\s\S]*?)\}\}/;
+  const entries = Object.entries(mutation);
+  if (entries.length === 0) return tag;
+
+  const styleExpr = entries.map(([key, value]) => `${key}: '${value}'`).join(', ');
+  const existing = tag.match(styleRegex);
+  if (existing && typeof existing.index === 'number') {
+    let content = existing[1] ?? '';
+    for (const [key] of entries) {
+      const keyRe = new RegExp(`(^|,)\\s*${escapeRegExp(key)}\\s*:\\s*[^,}]+\\s*(?=,|$)`, 'g');
+      content = content.replace(keyRe, '');
+    }
+    const cleaned = content.replace(/^,\s*|\s*,\s*$/g, '').trim();
+    const nextBody = cleaned.length > 0 ? `${cleaned}, ${styleExpr}` : styleExpr;
+    return `${tag.slice(0, existing.index)}style={{ ${nextBody} }}${tag.slice(existing.index + existing[0].length)}`;
+  }
+
+  const insert = ` style={{ ${styleExpr} }}`;
+  if (tag.endsWith('/>')) {
+    return `${tag.slice(0, -2)}${insert} />`;
+  }
+  return `${tag.slice(0, -1)}${insert}>`;
+}
+
+function applyQuickStyleAfter(source: string, line: number, draft: QuickStyleDraft, notFoundMessage: string): string {
+  const mutation = buildQuickStyleMutation(draft);
+  if (Object.keys(mutation).length === 0) {
+    return source;
+  }
+  const bounds = findNearestOpeningTagBounds(source, line);
+  if (!bounds) {
+    throw new Error(notFoundMessage);
+  }
+  const tag = source.slice(bounds.start, bounds.end);
+  const nextTag = applyStyleMutationToTag(tag, mutation);
+  if (nextTag === tag) {
+    throw new Error(notFoundMessage);
+  }
+  return `${source.slice(0, bounds.start)}${nextTag}${source.slice(bounds.end)}`;
 }
 
 function renderDiff(diffLines: Array<{ type: 'add' | 'del' | 'ctx'; content: string }>, emptyLabel: string): string {
@@ -853,6 +1006,7 @@ const AltPatchApp: React.FC<AltPatchAppProps> = ({ apiPrefix }) => {
   const [diffHtml, setDiffHtml] = useState(PANEL_I18N.zh.noDiffYet);
   const [streamOutputRaw, setStreamOutputRaw] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [quickStyle, setQuickStyle] = useState<QuickStyleDraft>(() => ({ ...EMPTY_QUICK_STYLE }));
   const [applyDisabled, setApplyDisabled] = useState(true);
   const [historyEntries, setHistoryEntries] = useState<HistorySnapshot[]>([]);
   const texts = useMemo(() => PANEL_I18N[locale], [locale]);
@@ -991,14 +1145,22 @@ const AltPatchApp: React.FC<AltPatchAppProps> = ({ apiPrefix }) => {
   }, [setStatusSafe, texts.switchedAi, texts.switchedQuick]);
 
   const handleInputChange = useCallback((value: string) => setInputValue(value), []);
+  const handleQuickStyleChange = useCallback((field: QuickStyleField, value: string) => {
+    setQuickStyle((prev) => ({ ...prev, [field]: value }));
+  }, []);
+  const handleToggleQuickStyleAdvanced = useCallback(() => {
+    setQuickStyle((prev) => ({ ...prev, advanced: !prev.advanced }));
+  }, []);
 
   const loadSource = useCallback(
     async (location: SourceLocation) => {
       setStatusSafe(texts.readingSource);
       const data = await postJson<ReadFileResponse>(`${apiPrefix}/read-file`, { filePath: location.filePath });
       sourceRef.current = data.content;
-      setMeta(`${location.filePath}:${location.line}:${location.column}`);
       const displayLine = resolveDisplayLineForSnippet(data.content, location.line || 1, selectedTextRef.current);
+      const resolvedLocation: SourceLocation = { ...location, line: displayLine };
+      locationRef.current = resolvedLocation;
+      setMeta(`${resolvedLocation.filePath}:${resolvedLocation.line}:${resolvedLocation.column}`);
       setCodeHtml(renderHighlighted(snippetFromSource(data.content, displayLine), 'code'));
       setStatusSafe(texts.ready);
     },
@@ -1016,13 +1178,21 @@ const AltPatchApp: React.FC<AltPatchAppProps> = ({ apiPrefix }) => {
       multiApplyFilesRef.current = [];
       const location = locationRef.current;
       const newText = inputValue;
-      if (!newText) {
+      const hasTextChange = newText.trim().length > 0;
+      const hasStyleChange = Object.keys(buildQuickStyleMutation(quickStyle)).length > 0;
+      if (!hasTextChange && !hasStyleChange) {
         setStatusSafe(texts.quickEmptyText);
         return;
       }
       setStatusSafe(texts.generatingQuickDiff);
       try {
-        const next = buildQuickTextAfter(sourceRef.current, location.line, selectedTextRef.current, newText, texts.quickReplaceNotFound);
+        let next = sourceRef.current;
+        if (hasTextChange) {
+          next = buildQuickTextAfter(next, location.line, selectedTextRef.current, newText, texts.quickReplaceNotFound);
+        }
+        if (hasStyleChange) {
+          next = applyQuickStyleAfter(next, location.line, quickStyle, texts.quickStyleApplyNotFound);
+        }
         modifiedRef.current = next;
         const diffData = await postJson<DiffResponse>(`${apiPrefix}/diff`, {
           filePath: location.filePath,
@@ -1204,7 +1374,7 @@ const AltPatchApp: React.FC<AltPatchAppProps> = ({ apiPrefix }) => {
       setStatusSafe(`${texts.generateFailed}: ${String(error)}`);
       showToast('error', `${texts.generateFailed}: ${String(error)}`);
     }
-  }, [apiPrefix, inputValue, mode, setStatusSafe, showToast, texts]);
+  }, [apiPrefix, inputValue, mode, quickStyle, setStatusSafe, showToast, texts]);
 
   const handleApply = useCallback(async () => {
     if (multiApplyFilesRef.current.length > 0) {
@@ -1394,6 +1564,7 @@ const AltPatchApp: React.FC<AltPatchAppProps> = ({ apiPrefix }) => {
       if (mode === 'quick') {
         setInputValue(selectedTextRef.current);
       }
+      setQuickStyle({ ...EMPTY_QUICK_STYLE });
 
       void loadSource(location).catch((error) => setStatusSafe(`${texts.readFailed}: ${String(error)}`));
     },
@@ -1674,6 +1845,7 @@ const AltPatchApp: React.FC<AltPatchAppProps> = ({ apiPrefix }) => {
       streamOutput={renderHighlighted(streamOutputRaw || '', 'code')}
       historyItems={historyItems}
       inputValue={inputValue}
+      quickStyle={quickStyle}
       applyDisabled={applyDisabledFlag}
       undoDisabled={undoDisabledFlag}
       visible={visible}
@@ -1691,6 +1863,8 @@ const AltPatchApp: React.FC<AltPatchAppProps> = ({ apiPrefix }) => {
       onSetTheme={setTheme}
       onSetLocale={setLocale}
       onInputChange={handleInputChange}
+      onQuickStyleChange={handleQuickStyleChange}
+      onToggleQuickStyleAdvanced={handleToggleQuickStyleAdvanced}
       onGenerate={handleGenerate}
       onApply={handleApply}
       onUndo={handleUndo}

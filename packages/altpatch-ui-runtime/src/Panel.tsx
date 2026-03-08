@@ -13,6 +13,21 @@ export type PanelLocaleOption = {
   id: PanelLocale;
   label: string;
 };
+export type QuickStyleDraft = {
+  padding: string;
+  margin: string;
+  fontSize: string;
+  paddingTop: string;
+  paddingRight: string;
+  paddingBottom: string;
+  paddingLeft: string;
+  marginTop: string;
+  marginRight: string;
+  marginBottom: string;
+  marginLeft: string;
+  advanced: boolean;
+};
+export type QuickStyleField = Exclude<keyof QuickStyleDraft, 'advanced'>;
 export type PanelTexts = {
   panelTitle: string;
   panelSubtitle: string;
@@ -40,6 +55,19 @@ export type PanelTexts = {
   inputLabelAi: string;
   inputPlaceholderQuick: string;
   inputPlaceholderAi: string;
+  quickStyleSection: string;
+  quickStyleAdvanced: string;
+  quickPadding: string;
+  quickMargin: string;
+  quickFontSize: string;
+  quickPaddingTop: string;
+  quickPaddingRight: string;
+  quickPaddingBottom: string;
+  quickPaddingLeft: string;
+  quickMarginTop: string;
+  quickMarginRight: string;
+  quickMarginBottom: string;
+  quickMarginLeft: string;
   llmStream: string;
   llmModel: string;
   fullscreen: string;
@@ -68,6 +96,7 @@ export type PanelProps = {
   streamOutput: string;
   historyItems: PanelHistoryItem[];
   inputValue: string;
+  quickStyle: QuickStyleDraft;
   applyDisabled: boolean;
   undoDisabled: boolean;
   visible: boolean;
@@ -86,6 +115,8 @@ export type PanelProps = {
   onSetTheme: (theme: ThemeMode) => void;
   onSetLocale: (locale: PanelLocale) => void;
   onInputChange: (value: string) => void;
+  onQuickStyleChange: (field: QuickStyleField, value: string) => void;
+  onToggleQuickStyleAdvanced: () => void;
   onGenerate: () => void;
   onApply: () => void;
   onUndo: () => void;
@@ -516,6 +547,72 @@ export const panelStyles = `
   textarea::-webkit-scrollbar-track { background: var(--panel-scroll-track); border-radius: 8px; }
   textarea::-webkit-scrollbar-thumb { background: var(--panel-scroll-thumb); border-radius: 8px; border: 2px solid var(--panel-scroll-track); }
   textarea::-webkit-scrollbar-thumb:hover { background: var(--panel-scroll-thumb-hover); }
+  .quick-style-box {
+    margin-top: 8px;
+    border: 1px solid var(--panel-border-soft);
+    border-radius: 10px;
+    padding: 8px;
+    background: linear-gradient(180deg, var(--panel-editor-bg-1), var(--panel-editor-bg-2));
+    display: grid;
+    gap: 7px;
+  }
+  .quick-style-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .quick-style-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--panel-text);
+    letter-spacing: 0.02em;
+  }
+  .quick-style-toggle {
+    border: 1px solid var(--panel-border-soft);
+    border-radius: 8px;
+    background: var(--panel-icon-bg);
+    color: var(--panel-text);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  .quick-style-grid {
+    display: grid;
+    gap: 6px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .quick-style-grid.advanced {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .quick-style-item {
+    display: grid;
+    gap: 4px;
+  }
+  .quick-style-item > span {
+    color: var(--panel-subtle);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .quick-style-input {
+    width: 100%;
+    background: var(--panel-icon-bg);
+    color: var(--panel-text);
+    border: 1px solid var(--panel-border-soft);
+    border-radius: 8px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    font-size: 12px;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+  }
+  .quick-style-input:focus {
+    outline: 2px solid var(--panel-accent-soft);
+    outline-offset: 1px;
+    border-color: var(--panel-accent);
+  }
   .actions { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 7px; }
   button.action {
     border: 1px solid var(--panel-border-soft);
@@ -620,6 +717,8 @@ export const panelStyles = `
     .toolbar { grid-template-columns: 1fr; }
     .workspace { grid-template-columns: minmax(0, 1fr); }
     .theme-picker { min-width: 0; }
+    .quick-style-grid,
+    .quick-style-grid.advanced { grid-template-columns: 1fr 1fr; }
   }
 `;
 
@@ -806,6 +905,110 @@ export function Panel(props: PanelProps): JSX.Element | null {
                 value={props.inputValue}
                 onChange={(event) => props.onInputChange(event.target.value)}
               />
+              {props.mode === 'quick' ? (
+                <div className="quick-style-box">
+                  <div className="quick-style-head">
+                    <div className="quick-style-title">{props.texts.quickStyleSection}</div>
+                    <button className="quick-style-toggle" type="button" onClick={props.onToggleQuickStyleAdvanced}>
+                      {props.texts.quickStyleAdvanced}
+                    </button>
+                  </div>
+                  <div className="quick-style-grid">
+                    <label className="quick-style-item">
+                      <span>{props.texts.quickPadding}</span>
+                      <input
+                        className="quick-style-input"
+                        value={props.quickStyle.padding}
+                        onChange={(event) => props.onQuickStyleChange('padding', event.target.value)}
+                      />
+                    </label>
+                    <label className="quick-style-item">
+                      <span>{props.texts.quickMargin}</span>
+                      <input
+                        className="quick-style-input"
+                        value={props.quickStyle.margin}
+                        onChange={(event) => props.onQuickStyleChange('margin', event.target.value)}
+                      />
+                    </label>
+                    <label className="quick-style-item">
+                      <span>{props.texts.quickFontSize}</span>
+                      <input
+                        className="quick-style-input"
+                        value={props.quickStyle.fontSize}
+                        onChange={(event) => props.onQuickStyleChange('fontSize', event.target.value)}
+                      />
+                    </label>
+                  </div>
+                  {props.quickStyle.advanced ? (
+                    <div className="quick-style-grid advanced">
+                      <label className="quick-style-item">
+                        <span>{props.texts.quickPaddingTop}</span>
+                        <input
+                          className="quick-style-input"
+                          value={props.quickStyle.paddingTop}
+                          onChange={(event) => props.onQuickStyleChange('paddingTop', event.target.value)}
+                        />
+                      </label>
+                      <label className="quick-style-item">
+                        <span>{props.texts.quickPaddingRight}</span>
+                        <input
+                          className="quick-style-input"
+                          value={props.quickStyle.paddingRight}
+                          onChange={(event) => props.onQuickStyleChange('paddingRight', event.target.value)}
+                        />
+                      </label>
+                      <label className="quick-style-item">
+                        <span>{props.texts.quickPaddingBottom}</span>
+                        <input
+                          className="quick-style-input"
+                          value={props.quickStyle.paddingBottom}
+                          onChange={(event) => props.onQuickStyleChange('paddingBottom', event.target.value)}
+                        />
+                      </label>
+                      <label className="quick-style-item">
+                        <span>{props.texts.quickPaddingLeft}</span>
+                        <input
+                          className="quick-style-input"
+                          value={props.quickStyle.paddingLeft}
+                          onChange={(event) => props.onQuickStyleChange('paddingLeft', event.target.value)}
+                        />
+                      </label>
+                      <label className="quick-style-item">
+                        <span>{props.texts.quickMarginTop}</span>
+                        <input
+                          className="quick-style-input"
+                          value={props.quickStyle.marginTop}
+                          onChange={(event) => props.onQuickStyleChange('marginTop', event.target.value)}
+                        />
+                      </label>
+                      <label className="quick-style-item">
+                        <span>{props.texts.quickMarginRight}</span>
+                        <input
+                          className="quick-style-input"
+                          value={props.quickStyle.marginRight}
+                          onChange={(event) => props.onQuickStyleChange('marginRight', event.target.value)}
+                        />
+                      </label>
+                      <label className="quick-style-item">
+                        <span>{props.texts.quickMarginBottom}</span>
+                        <input
+                          className="quick-style-input"
+                          value={props.quickStyle.marginBottom}
+                          onChange={(event) => props.onQuickStyleChange('marginBottom', event.target.value)}
+                        />
+                      </label>
+                      <label className="quick-style-item">
+                        <span>{props.texts.quickMarginLeft}</span>
+                        <input
+                          className="quick-style-input"
+                          value={props.quickStyle.marginLeft}
+                          onChange={(event) => props.onQuickStyleChange('marginLeft', event.target.value)}
+                        />
+                      </label>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
               <div className="actions">
                 <button className="action primary" id="altpatch-generate" onClick={props.onGenerate}>
                   {generateLabel}
